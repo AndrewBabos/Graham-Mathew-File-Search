@@ -1,0 +1,13 @@
+external/glfw/*
+
+!external/glfw/include/
+!external/glfw/include/GLFW/
+!external/glfw/include/GLFW/**
+
+!external/
+!external/glfw/
+!external/glfw/include/
+
+/build
+build.bat
+.cache
