@@ -3,6 +3,8 @@
 #include "imgui.h"
 #include "../external//imgui/imgui_impl_glfw.h"
 #include "../external//imgui/imgui_impl_opengl3.h"
+#include "imgui_internal.h"
+#include <filesystem>
 #include <iostream>
 
 UiController::UiController()
@@ -43,7 +45,6 @@ void UiController::render(FileDirectory& file_directory)
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
-
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -56,7 +57,7 @@ void UiController::render(FileDirectory& file_directory)
         file_directory_table(file_directory);
 
         ImGui::End();
-       // ImGui::ShowDemoWindow(); // only when i need doc
+        //ImGui::ShowDemoWindow(); // only when i need doc
         // Render
         ImGui::Render();
         glClear(GL_COLOR_BUFFER_BIT);
@@ -96,18 +97,15 @@ void UiController::search_bar(FileDirectory& file_directory)
     //ImGui::SameLine();
     if (ImGui::Button("Select Folder"))
     {
-        ImGui::BeginPopupModal("Scanning...");
+        is_directory_scanned = false;
+        //ImGui::BeginPopupModal("Scanning...");
         const char* folder_path = file_directory.open_folder_dialog();
         if (folder_path == nullptr)
         {
             std::cout << "Open Folder dialog window returned nullptr (no string)" << std::endl;
             return;
         }
-
-        // i think here the bool is set to true WAY before the scan is complete
-        if (file_directory.scan(folder_path));
-            //file_directory.display_tree();
-            //is_directory_scanned = true;
+        is_directory_scanned = file_directory.scan(folder_path);
     }
 }
 
@@ -133,52 +131,50 @@ void UiController::file_directory_table(FileDirectory& file_directory)
         ImGui::TableHeadersRow();
 
         if (is_directory_scanned)
-        {
-            std::cout << "Attempting to display data structure...\n";
             UiController::display_nodes(file_directory.get_root_node());
-        }
         ImGui::EndTable();
     }
 }
 
 void UiController::display_nodes(TreeNode* node)
 {
+    // either scan not completed...
+    // or the node is actually a nullptr lol
     if (!node)
-    {
-        std::cout << "The passed in node == nullptr\n";
         return;
-    }
+
     static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull;
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
 
     ImGuiTreeNodeFlags node_flags = tree_node_flags_base;
-    // if (node != &all_nodes[0])
-    //     node_flags &= ~ImGuiTreeNodeFlags_LabelSpanAllColumns; // Only demonstrate this on the root node.
-
-    if (node->is_directory)
+    while (node != nullptr)
     {
-        bool open = ImGui::TreeNodeEx(node->file_name, node_flags);
-        if ((node_flags) == 0)
-        {
-            ImGui::TableNextColumn();
-            ImGui::TextDisabled("--");
-            ImGui::TableNextColumn();
-            ImGui::TextUnformatted(node->file_path);
-        }
-        if (open)
-        {
-            display_nodes(node->sub_folder);
-            ImGui::TreePop();
-        }
-    }
-    else
-    {
-        ImGui::TreeNodeEx(node->file_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+        ImGui::TableNextRow();
         ImGui::TableNextColumn();
-        ImGui::Text("%zu", node->file_size);
-        ImGui::TableNextColumn();
-        ImGui::TextUnformatted(node->file_path);
+        if (node->is_directory)
+        {
+            ImGui::Separator();
+            if (ImGui::TreeNodeEx(node->file_name, node_flags))
+            {
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Folder");
+                display_nodes(node->sub_folder);
+                ImGui::TreePop();
+            }
+        }
+        else
+        {
+            ImGui::TreeNodeEx(node->file_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+            ImGui::TableNextColumn();
+            if (node->is_directory)
+                ImGui::TextUnformatted("Folder");
+            else
+                ImGui::TextUnformatted("File");
+            ImGui::TableNextColumn();
+            ImGui::Text("%zu (Bytes)", node->file_size);
+        }
+        node = node->next_file;
     }
 }
 

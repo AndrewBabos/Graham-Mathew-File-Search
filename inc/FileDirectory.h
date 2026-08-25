@@ -22,7 +22,7 @@ private:
 private:
     void delete_tree_nodes(TreeNode* node);
     TreeNode* scan_directory(TreeNode* parent, fs::path directory_path);
-    TreeNode* scan_complete_filepath(TreeNode* parent, fs::path directory_path);
+    //TreeNode* scan_complete_filepath(TreeNode* parent, fs::path directory_path);
     //void display_tree();
 public:
     FileDirectory();
@@ -30,7 +30,7 @@ public:
     const char* open_folder_dialog();
     bool scan(fs::path directory_path);
 
-    TreeNode* get_root_node();
+    TreeNode* get_root_node() const;
     ~FileDirectory();
 };
 

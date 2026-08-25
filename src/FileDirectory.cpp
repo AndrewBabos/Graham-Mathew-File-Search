@@ -1,5 +1,5 @@
 #include "../inc/FileDirectory.h"
-#include <cstddef>
+//#include <cstddef>
 #include <cstdlib>
 //#include <exception>
 #include <filesystem>
@@ -45,12 +45,13 @@ bool FileDirectory::scan(fs::path directory_path)
 
         std::cout << "Total time to scan: " << directory_path << " | " << elapsed.count() / 1000 << "s\n";
         std::cout << num_of_nodes << " total nodes allocated in RAM\n";
-        display_tree();
         is_scanning = false;
-    }
-    );
+        return true;
+    });
     return true;
 }
+
+
 // ? -----------------------------------------------------
 // TODO:
 // ?     Currently this method scans recursively through
@@ -127,11 +128,11 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
     };
 }
 
-TreeNode* FileDirectory::scan_complete_filepath(TreeNode* parent, fs::path directory_path)
-{
-    //TreeNode* node = new TreeNode();
-    return new TreeNode();
-}
+// TreeNode* FileDirectory::scan_complete_filepath(TreeNode* parent, fs::path directory_path)
+// {
+//     //TreeNode* node = new TreeNode();
+//     return new TreeNode();
+// }
 
 void FileDirectory::display_tree()
 {
@@ -169,7 +170,7 @@ void display_node(TreeNode* node, int depth)
         }
         else
         {// WARN: theres a complete null node somewhere being added in
-            std::cout << "no filename";
+            std::cout << "no filename\n";
         }
 
         if (current->is_directory)
@@ -187,26 +188,21 @@ void display_node(TreeNode* node, int depth)
 
 const char* FileDirectory::open_folder_dialog()
 {
-    //return "C:/Users/Andrew/Documents/GitHub/C++/filesearch/scan-test-folder";
+    return "C:/Users/Andrew/Documents/GitHub/C++/filesearch/scan-test-folder";
     //return "C:/Users/Andrew/Documents/GitHub/C++";
     //return "C:/Users/Andrew/Documents/GitHub";
-    return "C:/Users/Andrew"; // limit testing LOL
+    //return "C:/Users/Andrew"; // limit testing LOL
+    //return "C:/"; // ABSOLUTE LIMIT TEST LMFAO
 }
 
 void FileDirectory::delete_tree_nodes(TreeNode* node)
 {
     if (!node)
         return;
-    // if (node->parent)
-    //     delete node->parent;
-    // if (node->sub_folder)
-    //     delete node->sub_folder;
-    // if (node->next_file)
-    //     delete node->next_file;
     if (node->file_name)
-        delete node->file_name;
+        free(node->file_name);
     if (node->file_path)
-        delete node->file_path;
+        free(node->file_path);
 
     TreeNode* child = node->sub_folder;
     while (child)
@@ -218,7 +214,7 @@ void FileDirectory::delete_tree_nodes(TreeNode* node)
     delete node;
 }
 
-TreeNode* FileDirectory::get_root_node()
+TreeNode* FileDirectory::get_root_node() const
 {
     return root;
 }
@@ -227,6 +223,8 @@ FileDirectory::~FileDirectory()
 {
     if (thr_scan_directory.joinable())
         thr_scan_directory.join();
+    else
+        std::cout << "Thread was not used, \n";
     if (root != nullptr)
     {
         delete_tree_nodes(root);

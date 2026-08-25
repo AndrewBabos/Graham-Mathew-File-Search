@@ -15,6 +15,7 @@ private:
     static constexpr uint16_t WINDOW_WIDTH = 800;
     static constexpr uint8_t MAX_INPUT_SIZE = 75;
     bool is_directory_scanned;
+    //bool rendered;
 private:
     void display_nodes(TreeNode* node);
 public:
