@@ -69,8 +69,6 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
             std::cerr << "Directory path doesnt exist\n";
             return nullptr;
         }
-        // TreeNode* current_node = new TreeNode();
-        // current_node->parent = parent;
         TreeNode* first_child = nullptr;
         TreeNode* last_child = nullptr;
 
@@ -84,7 +82,7 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
 
             std::string name = entry.path().filename().string();
             std::string path = entry.path().string();
-            new_node->file_name = (char*)malloc(name.length() + 1);
+            new_node->file_name = (char*)malloc(name.length() + 5); //
             new_node->file_path = (char*)malloc(path.length() + 1);
             std::strcpy((char*)new_node->file_name, name.c_str());
             std::strcpy((char*)new_node->file_path, path.c_str());
@@ -94,7 +92,6 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
                 new_node->is_directory = false;
                 new_node->file_size = entry.file_size();
             }
-
             else if (entry.is_directory())
             {
                 new_node->is_directory = true;
@@ -127,12 +124,6 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
         return nullptr;
     };
 }
-
-// TreeNode* FileDirectory::scan_complete_filepath(TreeNode* parent, fs::path directory_path)
-// {
-//     //TreeNode* node = new TreeNode();
-//     return new TreeNode();
-// }
 
 void FileDirectory::display_tree()
 {

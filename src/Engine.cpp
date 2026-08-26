@@ -19,7 +19,7 @@ bool Engine::startup()
 void Engine::run()
 {
     if (!startup_finished)
-        return void();
+        return;
 
     ui_controller.render(file_directory);
 }

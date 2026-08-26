@@ -3,22 +3,21 @@
 #include "imgui.h"
 #include "../external//imgui/imgui_impl_glfw.h"
 #include "../external//imgui/imgui_impl_opengl3.h"
-#include "imgui_internal.h"
-#include <filesystem>
+#include "../inc/IconsFontAwesome6.h"
 #include <iostream>
 
 UiController::UiController()
 {
     if (!glfwInit())
     {
-        std::cout << "error initiating GLFW" << std::endl;
+        std::cout << "error initiating GLFW\n";
         return;
     }
     window = window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT,
                             "FileSearch", nullptr, nullptr);
     if (!window)
     {
-        std::cout << "Error creating main window" << std::endl;
+        std::cout << "Error creating main window\n";
         glfwTerminate();
         return;
     }
@@ -34,10 +33,36 @@ UiController::UiController()
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+        std::cout << "Failed to initialize GLAD\n";
         return;
     }
+    //set_imgui_font();
     is_directory_scanned = false;
+    if (!set_imgui_font())
+    {
+        std::cout << "Could not load font\n";
+        return;
+    }
+}
+
+bool UiController::set_imgui_font()
+{
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->AddFontDefault();
+
+    ImFontConfig icon_config;
+    icon_config.MergeMode = true;
+    icon_config.PixelSnapH = true;
+    icon_config.GlyphMinAdvanceX = 14.0f;
+    static const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+    io.Fonts->AddFontFromFileTTF(
+        "../external/fonts/fa-solid-900.ttf",
+        16.0f,
+        &icon_config,
+        icon_ranges
+    );
+    io.Fonts->Build();
+    return true;
 }
 
 void UiController::render(FileDirectory& file_directory)
@@ -143,7 +168,7 @@ void UiController::display_nodes(TreeNode* node)
     if (!node)
         return;
 
-    static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull;
+    static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns  | ImGuiTreeNodeFlags_DrawLinesFull;
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
 
@@ -154,8 +179,12 @@ void UiController::display_nodes(TreeNode* node)
         ImGui::TableNextColumn();
         if (node->is_directory)
         {
-            ImGui::Separator();
-            if (ImGui::TreeNodeEx(node->file_name, node_flags))
+            size_t size = sizeof(node->file_name) + sizeof(ICON_FA_FOLDER) + 16;
+            char node_name[size];
+            snprintf(node_name, size, "%s %s", ICON_FA_FOLDER, node->file_name);
+
+            //if (ImGui::TreeNodeEx(node->file_name, node_flags))
+            if (ImGui::TreeNodeEx(node_name, node_flags))
             {
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Folder");
@@ -165,7 +194,11 @@ void UiController::display_nodes(TreeNode* node)
         }
         else
         {
-            ImGui::TreeNodeEx(node->file_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+            size_t size = sizeof(node->file_name) + sizeof(ICON_FA_FILE) + 16;
+            char node_name[size];
+            snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
+            ImGui::TreeNodeEx(node_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+            //ImGui::TreeNodeEx(node->file_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
             ImGui::TableNextColumn();
             if (node->is_directory)
                 ImGui::TextUnformatted("Folder");
