@@ -1,18 +1,17 @@
 #include "../inc/FileDirectory.h"
-//#include <cstddef>
 #include <cstdlib>
-//#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <cstring>
-#include <thread>
 
 void display_node(TreeNode* node, int depth);
 
 FileDirectory::FileDirectory()
 {
-    folder_test_path = "C:/Users/Andrew/Documents/GitHub/C++/filesearch/test-folder";
     root = nullptr;
+    head = nullptr;
+    tail = nullptr;
+    //vec_search_results.reserve(2);
     num_of_nodes = 0;
     is_scanning = false;
 }
@@ -79,10 +78,17 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
             new_node->parent = parent;
             new_node->sub_folder = nullptr;
             new_node->next_file = nullptr;
+            // linked list for linear search
+            new_node->next_all = nullptr;
+            if (!head)
+                head = new_node;
+            else
+                tail->next_all = new_node;
+            tail = new_node;
 
             std::string name = entry.path().filename().string();
             std::string path = entry.path().string();
-            new_node->file_name = (char*)malloc(name.length() + 5); //
+            new_node->file_name = (char*)malloc(name.length() + 1);
             new_node->file_path = (char*)malloc(path.length() + 1);
             std::strcpy((char*)new_node->file_name, name.c_str());
             std::strcpy((char*)new_node->file_path, path.c_str());
@@ -90,12 +96,13 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
             if (entry.is_regular_file())
             {
                 new_node->is_directory = false;
-                new_node->file_size = entry.file_size();
+                //new_node->file_size = entry.file_size();
+                //new_node->file_size = 0;
             }
             else if (entry.is_directory())
             {
                 new_node->is_directory = true;
-                new_node->file_size = 0;
+                //new_node->file_size = 0;
                 TreeNode* sub_tree_root = scan_directory(new_node, entry.path());
                 new_node->sub_folder = sub_tree_root;
             }
@@ -111,8 +118,8 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
                 first_child = new_node; // First item in the list
             else
                 last_child->next_file = new_node; // Link to previous
-
             last_child = new_node;
+
             num_of_nodes++;
         }
         return first_child;
@@ -120,9 +127,31 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
     catch (fs::filesystem_error& file_error)
     {
         is_scanning = false;
-        std::cout <<"Error reading file, someones accessed it: " << file_error.what();
+        std::cout <<"Error reading file, someones accessed it: " << file_error.what() << "\n";
         return nullptr;
     };
+}
+
+// throw this into a vector?
+vector<char*> FileDirectory::get_search_results(const char* search_string)
+{
+    vector<char*> vec_results{};
+    if (!head)
+        return vec_results;
+
+    TreeNode* current = head;
+    uint16_t num_of_occurences = 0;
+    while (current != nullptr)
+    {
+        if (strstr(current->file_name, search_string) != nullptr)
+        {
+            std::cout << "Found " << current->file_name << "\n";
+            num_of_occurences++;
+            vec_results.push_back(current->file_name);
+        }
+        current = current->next_all;
+    }
+    return vec_results;
 }
 
 void FileDirectory::display_tree()
@@ -166,8 +195,6 @@ void display_node(TreeNode* node, int depth)
 
         if (current->is_directory)
             std::cout << "/ (Dir)\n";
-        else
-            std::cout << " (" << current->file_size << " bytes)\n";
 
         // found a folder? (directory)
         if (current->is_directory || current->sub_folder)
@@ -179,11 +206,11 @@ void display_node(TreeNode* node, int depth)
 
 const char* FileDirectory::open_folder_dialog()
 {
-    return "C:/Users/Andrew/Documents/GitHub/C++/filesearch/scan-test-folder";
+    //return "C:/Users/Andrew/Documents/GitHub/C++/filesearch/scan-test-folder";
     //return "C:/Users/Andrew/Documents/GitHub/C++";
     //return "C:/Users/Andrew/Documents/GitHub";
     //return "C:/Users/Andrew"; // limit testing LOL
-    //return "C:/"; // ABSOLUTE LIMIT TEST LMFAO
+    return "C:/"; // ABSOLUTE LIMIT TEST LMFAO
 }
 
 void FileDirectory::delete_tree_nodes(TreeNode* node)

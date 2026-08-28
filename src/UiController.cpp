@@ -36,13 +36,14 @@ UiController::UiController()
         std::cout << "Failed to initialize GLAD\n";
         return;
     }
-    //set_imgui_font();
-    is_directory_scanned = false;
     if (!set_imgui_font())
     {
         std::cout << "Could not load font\n";
         return;
     }
+    vec_search_results = {};
+    is_directory_scanned = false;
+    is_searching = false;
 }
 
 bool UiController::set_imgui_font()
@@ -75,6 +76,7 @@ void UiController::render(FileDirectory& file_directory)
         ImGui::NewFrame();
         set_dockspace();
 
+
         ImGui::Begin("File Directory");
     // search file section
         search_bar(file_directory);
@@ -82,8 +84,8 @@ void UiController::render(FileDirectory& file_directory)
         file_directory_table(file_directory);
 
         ImGui::End();
+
         //ImGui::ShowDemoWindow(); // only when i need doc
-        // Render
         ImGui::Render();
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -118,7 +120,13 @@ void UiController::search_bar(FileDirectory& file_directory)
 {
     char buffer[MAX_INPUT_SIZE] = {}; // might need to change input size, or char* str;
     ImGui::SameLine();
-    ImGui::InputText("Enter file name here", buffer, sizeof(buffer));
+
+    if (ImGui::InputText("Enter file name here", buffer, sizeof(buffer)))
+    {
+        ImGui::Text("Keys down:");
+        vec_search_results = file_directory.get_search_results(buffer);
+    }
+    
     //ImGui::SameLine();
     if (ImGui::Button("Select Folder"))
     {
@@ -163,8 +171,6 @@ void UiController::file_directory_table(FileDirectory& file_directory)
 
 void UiController::display_nodes(TreeNode* node)
 {
-    // either scan not completed...
-    // or the node is actually a nullptr lol
     if (!node)
         return;
 
@@ -193,7 +199,7 @@ void UiController::display_nodes(TreeNode* node)
             }
         }
         else
-        {
+        { // fix this +16 stuff not sure why it clips the names
             size_t size = sizeof(node->file_name) + sizeof(ICON_FA_FILE) + 16;
             char node_name[size];
             snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
@@ -204,8 +210,8 @@ void UiController::display_nodes(TreeNode* node)
                 ImGui::TextUnformatted("Folder");
             else
                 ImGui::TextUnformatted("File");
-            ImGui::TableNextColumn();
-            ImGui::Text("%zu (Bytes)", node->file_size);
+            //ImGui::TableNextColumn();
+            //ImGui::Text("%zu (Bytes)", node->file_size);
         }
         node = node->next_file;
     }

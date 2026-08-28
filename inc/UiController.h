@@ -11,10 +11,12 @@ class UiController
 {
 private:
     GLFWwindow* window;
+    vector<char*> vec_search_results;
     static constexpr uint16_t WINDOW_HEIGHT = 800;
     static constexpr uint16_t WINDOW_WIDTH = 800;
     static constexpr uint8_t MAX_INPUT_SIZE = 75;
     bool is_directory_scanned;
+    bool is_searching;
 private:
     bool set_imgui_font();
     void display_nodes(TreeNode* node);
