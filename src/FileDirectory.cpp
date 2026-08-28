@@ -1,10 +1,7 @@
 #include "../inc/FileDirectory.h"
 #include <cstdlib>
-#include <filesystem>
 #include <iostream>
 #include <cstring>
-
-void display_node(TreeNode* node, int depth);
 
 FileDirectory::FileDirectory()
 {
@@ -141,6 +138,7 @@ vector<char*> FileDirectory::get_search_results(const char* search_string)
 
     TreeNode* current = head;
     uint16_t num_of_occurences = 0;
+
     while (current != nullptr)
     {
         if (strstr(current->file_name, search_string) != nullptr)
@@ -154,63 +152,14 @@ vector<char*> FileDirectory::get_search_results(const char* search_string)
     return vec_results;
 }
 
-void FileDirectory::display_tree()
-{
-    if (!root)
-    {
-        std::cout << "Tree is empty. Run scan() first." << std::endl;
-        return;
-    }
-    // ? might have to have a check where if the scan
-    // ? thread is JOINABLE, THEN display the tree
-    // # if (thr_scan_directory.joinable())
-    // #   display_node(root, 0);
-    std::cout << "--- File Directory Structure ---\n";
-    display_node(root, 0); // Start at root, depth 0
-    std::cout << "--------------------------------\n";
-}
-
-void display_node(TreeNode* node, int depth)
-{
-    if (!node) return;
-
-    TreeNode* current = node;
-    while (current != nullptr)
-    {
-        // indentation
-        for (int i = 0; i < depth; ++i)
-            std::cout << "  ";
-
-        // check if file name is null
-        if (current->file_name)
-        {
-            std::cout << current->file_name;
-            if (!current->is_directory)
-                std::cout << " : " << current->file_path;
-        }
-        else
-        {// WARN: theres a complete null node somewhere being added in
-            std::cout << "no filename\n";
-        }
-
-        if (current->is_directory)
-            std::cout << "/ (Dir)\n";
-
-        // found a folder? (directory)
-        if (current->is_directory || current->sub_folder)
-            display_node(current->sub_folder, depth + 1);
-
-        current = current->next_file; // move to the next file
-    }
-}
-
+// TODO: replace with open folder dialog eventually :D
 const char* FileDirectory::open_folder_dialog()
 {
     //return "C:/Users/Andrew/Documents/GitHub/C++/filesearch/scan-test-folder";
     //return "C:/Users/Andrew/Documents/GitHub/C++";
     //return "C:/Users/Andrew/Documents/GitHub";
     //return "C:/Users/Andrew"; // limit testing LOL
-    return "C:/"; // ABSOLUTE LIMIT TEST LMFAO
+    return "C:/"; // ABSOLUTE LIMIT TEST
 }
 
 void FileDirectory::delete_tree_nodes(TreeNode* node)

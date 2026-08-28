@@ -17,15 +17,11 @@ private:
     std::thread thr_scan_directory;
     int num_of_nodes;
     bool is_scanning;
-
 private:
     void delete_tree_nodes(TreeNode* node);
     TreeNode* scan_directory(TreeNode* parent, fs::path directory_path);
-    //vector<char*> search_results(const char* search_string);
-
 public:
     FileDirectory();
-    void display_tree();
     const char* open_folder_dialog();
     bool scan(fs::path directory_path);
 

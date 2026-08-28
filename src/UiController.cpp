@@ -123,13 +123,22 @@ void UiController::search_bar(FileDirectory& file_directory)
 
     if (ImGui::InputText("Enter file name here", buffer, sizeof(buffer)))
     {
-        ImGui::Text("Keys down:");
-        vec_search_results = file_directory.get_search_results(buffer);
+        if (ImGui::IsKeyDown(ImGuiKey_Enter))
+        {
+            is_searching = true;
+            auto start = std::chrono::steady_clock::now();
+            vec_search_results = file_directory.get_search_results(buffer);
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double, std::milli> elapsed = end - start;
+            std::cout << "Total time to search through linked list: " << elapsed.count() / 1000 << "s\n";
+        }
     }
-    
+
+
     //ImGui::SameLine();
     if (ImGui::Button("Select Folder"))
     {
+        is_searching = false;
         is_directory_scanned = false;
         //ImGui::BeginPopupModal("Scanning...");
         const char* folder_path = file_directory.open_folder_dialog();
@@ -156,16 +165,27 @@ void UiController::file_directory_table(FileDirectory& file_directory)
     const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
     static ImGuiTableFlags table_flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
 
-    if (ImGui::BeginTable("Directory", 3, table_flags))
+    if (!is_searching)
     {
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
-        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
-        ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0f);
-        ImGui::TableHeadersRow();
+        if (ImGui::BeginTable("Directory", 3, table_flags))
+        {
+            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
+            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
+            ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0f);
+            ImGui::TableHeadersRow();
 
-        if (is_directory_scanned)
-            UiController::display_nodes(file_directory.get_root_node());
-        ImGui::EndTable();
+            if (is_directory_scanned)
+                UiController::display_nodes(file_directory.get_root_node());
+            ImGui::EndTable();
+        }
+    }
+    else
+    {
+        //std::cout << "Display search results here\n";
+        for (const char* file_name : vec_search_results)
+        {
+            // figre out how to display search results
+        }
     }
 }
 
