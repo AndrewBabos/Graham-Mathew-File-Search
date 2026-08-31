@@ -199,16 +199,20 @@ void UiController::display_nodes(TreeNode* node)
     ImGui::TableNextColumn();
 
     ImGuiTreeNodeFlags node_flags = tree_node_flags_base;
+    static int selection = (1 << 2);
     while (node != nullptr)
     {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
+
+        size_t size = strlen(node->file_name) + sizeof(ICON_FA_FOLDER) + STR_SPACE;
+        char node_name[size];
+
         if (node->is_directory)
         {
-            size_t size = sizeof(node->file_name) + sizeof(ICON_FA_FOLDER) + 16;
-            char node_name[size];
+            // size_t size = strlen(node->file_name) + sizeof(ICON_FA_FOLDER) + 2;
+            // char node_name[size];
             snprintf(node_name, size, "%s %s", ICON_FA_FOLDER, node->file_name);
-
             //if (ImGui::TreeNodeEx(node->file_name, node_flags))
             if (ImGui::TreeNodeEx(node_name, node_flags))
             {
@@ -220,8 +224,8 @@ void UiController::display_nodes(TreeNode* node)
         }
         else
         { // fix this +16 stuff not sure why it clips the names
-            size_t size = sizeof(node->file_name) + sizeof(ICON_FA_FILE) + 16;
-            char node_name[size];
+            // size_t size = strlen(node->file_name) + sizeof(ICON_FA_FILE) + 2;
+            // char node_name[size];
             snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
             ImGui::TreeNodeEx(node_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
             //ImGui::TreeNodeEx(node->file_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);

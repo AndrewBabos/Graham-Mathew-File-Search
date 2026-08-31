@@ -7,6 +7,8 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+#define STR_SPACE 2
+
 // <summary>This class represents the FileDirectory Data Structure
 class FileDirectory
 {
