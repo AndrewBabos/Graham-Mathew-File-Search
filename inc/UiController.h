@@ -4,23 +4,23 @@
 #include "../external/glad/include/glad/glad.h"
 #include "../external/glfw/include/GLFW/glfw3.h"
 #include "../inc/FileDirectory.h"
-//#include "../inc/struct/TreeNode.h"
 #include <cstdint>
 
 class UiController
 {
 private:
     GLFWwindow* window;
-    vector<char*> vec_search_results;
-    static constexpr uint16_t WINDOW_HEIGHT = 800;
-    static constexpr uint16_t WINDOW_WIDTH = 800;
-    static constexpr uint8_t MAX_INPUT_SIZE = 75;
+    vector<TreeNode*> vec_search_results;
+    static constexpr uint16_t   WINDOW_HEIGHT   = 800;
+    static constexpr uint16_t   WINDOW_WIDTH    = 800;
+    static constexpr uint8_t    MAX_INPUT_SIZE  = 75;
+    static constexpr uint8_t            RMB     = 1;
     bool is_directory_scanned;
     bool is_searching;
 private:
     bool set_imgui_font();
     void display_nodes(TreeNode* node);
-// TODO: probably needs return 'fs::path' type
+// TODO: probably needs return 'fs::path' type and windows api
     void open_file_dialog();
 
 public:
@@ -30,6 +30,7 @@ public:
     // ui methods
     void search_bar(FileDirectory& file_directory);
     void file_directory_table(FileDirectory& file_directory);
+    void file_info_popup();
     ~UiController();
 };
 

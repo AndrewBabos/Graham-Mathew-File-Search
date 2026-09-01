@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
+#include <string.h>
 
 FileDirectory::FileDirectory()
 {
@@ -47,15 +48,6 @@ bool FileDirectory::scan(fs::path directory_path)
     return true;
 }
 
-
-// ? -----------------------------------------------------
-// TODO:
-// ?     Currently this method scans recursively through
-// ?     the filepath given (currently open_folder_dialog()
-// ?     returns a hardcoded filepath). Eventually optimize
-// ?     where it only scans the folder specified, and THEN
-// ?     scan the subfolder when the user opens that folder.
-// ? -----------------------------------------------------
 TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_path)
 {
     try
@@ -129,12 +121,11 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
     };
 }
 
-// throw this into a vector?
-vector<char*> FileDirectory::get_search_results(const char* search_string)
+vector<TreeNode*> FileDirectory::get_search_results(const char* search_string)
 {
-    vector<char*> vec_results{};
+    vector<TreeNode*> vec_results{};
     if (!head)
-        return vec_results;
+        return vec_results; // return empty
 
     TreeNode* current = head;
     uint16_t num_of_occurences = 0;
@@ -145,7 +136,7 @@ vector<char*> FileDirectory::get_search_results(const char* search_string)
         {
             std::cout << "Found " << current->file_name << "\n";
             num_of_occurences++;
-            vec_results.push_back(current->file_name);
+            vec_results.push_back(current);
         }
         current = current->next_all;
     }
@@ -158,7 +149,6 @@ const char* FileDirectory::open_folder_dialog()
     //return "C:/Users/Andrew/Documents/GitHub/C++/filesearch/scan-test-folder";
     //return "C:/Users/Andrew/Documents/GitHub/C++";
     //return "C:/Users/Andrew/Documents/GitHub";
-    //return "C:/Users/Andrew"; // limit testing LOL
     return "C:/"; // ABSOLUTE LIMIT TEST
 }
 

@@ -5,6 +5,7 @@
 #include "../external//imgui/imgui_impl_opengl3.h"
 #include "../inc/IconsFontAwesome6.h"
 #include <iostream>
+#include <variant>
 
 UiController::UiController()
 {
@@ -78,11 +79,8 @@ void UiController::render(FileDirectory& file_directory)
 
 
         ImGui::Begin("File Directory");
-    // search file section
         search_bar(file_directory);
-    // file directory table
         file_directory_table(file_directory);
-
         ImGui::End();
 
         //ImGui::ShowDemoWindow(); // only when i need doc
@@ -118,29 +116,31 @@ void UiController::set_dockspace()
 
 void UiController::search_bar(FileDirectory& file_directory)
 {
-    char buffer[MAX_INPUT_SIZE] = {}; // might need to change input size, or char* str;
+    char search_string[MAX_INPUT_SIZE] = {}; // might need to change input size, or char* str;
     ImGui::SameLine();
 
-    if (ImGui::InputText("Enter file name here", buffer, sizeof(buffer)))
+    if (ImGui::InputText("Enter file name here", search_string, sizeof(search_string)))
     {
         if (ImGui::IsKeyDown(ImGuiKey_Enter))
         {
             is_searching = true;
             auto start = std::chrono::steady_clock::now();
-            vec_search_results = file_directory.get_search_results(buffer);
+            vec_search_results = file_directory.get_search_results(search_string);
             auto end = std::chrono::steady_clock::now();
+            if (vec_search_results.empty())
+            {
+                std::cout << "No direct reference to a location was specified, no scan started nor finished...\n";
+                return;
+            }
             std::chrono::duration<double, std::milli> elapsed = end - start;
             std::cout << "Total time to search through linked list: " << elapsed.count() / 1000 << "s\n";
         }
     }
 
-
-    //ImGui::SameLine();
     if (ImGui::Button("Select Folder"))
     {
         is_searching = false;
         is_directory_scanned = false;
-        //ImGui::BeginPopupModal("Scanning...");
         const char* folder_path = file_directory.open_folder_dialog();
         if (folder_path == nullptr)
         {
@@ -165,27 +165,44 @@ void UiController::file_directory_table(FileDirectory& file_directory)
     const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
     static ImGuiTableFlags table_flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
 
-    if (!is_searching)
+    if (ImGui::BeginTable("Directory", 3, table_flags))
     {
-        if (ImGui::BeginTable("Directory", 3, table_flags))
-        {
-            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
-            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
-            ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0f);
-            ImGui::TableHeadersRow();
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
+        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
+        ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0f);
+        ImGui::TableHeadersRow();
 
+        if (is_searching)
+        {
+            for (const TreeNode* node : vec_search_results)
+            {                                             // ICON_FA_FILE & FOLDER are the same size
+                const size_t size = strlen(node->file_name) + sizeof(ICON_FA_FILE) + STR_SPACE;
+                char node_name[size];
+                if (node->is_directory)
+                {
+                    snprintf(node_name, size, "%s %s", ICON_FA_FOLDER, node->file_name);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TreeNodeEx(node_name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    ImGui::TableNextRow();
+                }
+                else
+                {
+                    snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
+                    // std::cout << "Calculated size to display: " << size << "\n";
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TreeNodeEx(node_name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                    ImGui::TableNextRow();
+                }
+            }
+        }
+        else
+        {
             if (is_directory_scanned)
                 UiController::display_nodes(file_directory.get_root_node());
-            ImGui::EndTable();
         }
-    }
-    else
-    {
-        //std::cout << "Display search results here\n";
-        for (const char* file_name : vec_search_results)
-        {
-            // figre out how to display search results
-        }
+        ImGui::EndTable();
     }
 }
 
@@ -194,18 +211,17 @@ void UiController::display_nodes(TreeNode* node)
     if (!node)
         return;
 
-    static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns  | ImGuiTreeNodeFlags_DrawLinesFull;
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
 
-    ImGuiTreeNodeFlags node_flags = tree_node_flags_base;
+    ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_SpanAllColumns  | ImGuiTreeNodeFlags_DrawLinesFull;;
     static int selection = (1 << 2);
     while (node != nullptr)
     {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
 
-        size_t size = strlen(node->file_name) + sizeof(ICON_FA_FOLDER) + STR_SPACE;
+        const size_t size = strlen(node->file_name) + sizeof(ICON_FA_FOLDER) + STR_SPACE;
         char node_name[size];
 
         if (node->is_directory)
@@ -213,6 +229,8 @@ void UiController::display_nodes(TreeNode* node)
             snprintf(node_name, size, "%s %s", ICON_FA_FOLDER, node->file_name);
             if (ImGui::TreeNodeEx(node_name, node_flags))
             {
+                if (ImGui::IsMouseClicked(RMB))
+                    file_info_popup();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Folder");
                 display_nodes(node->sub_folder);
@@ -223,6 +241,8 @@ void UiController::display_nodes(TreeNode* node)
         {
             snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
             ImGui::TreeNodeEx(node_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+            if (ImGui::IsMouseClicked(RMB))
+                file_info_popup();
             ImGui::TableNextColumn();
             if (node->is_directory)
                 ImGui::TextUnformatted("Folder");
@@ -232,6 +252,18 @@ void UiController::display_nodes(TreeNode* node)
             //ImGui::Text("%zu (Bytes)", node->file_size);
         }
         node = node->next_file;
+    }
+}
+
+void UiController::file_info_popup()
+{
+    static int count = 0;
+    std::cout << "testing " << count++ << "\n";
+    if (ImGui::BeginPopup("File Properties"))
+    {
+        ImGui::Text("Hello from popup!");
+        ImGui::Button("This is a dummy button..");
+        ImGui::EndPopup();
     }
 }
 

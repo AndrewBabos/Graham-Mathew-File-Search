@@ -27,7 +27,7 @@ public:
     const char* open_folder_dialog();
     bool scan(fs::path directory_path);
 
-    vector<char*> get_search_results(const char* search_string);
+    vector<TreeNode*> get_search_results(const char* search_string);
     TreeNode* get_root_node() const;
     ~FileDirectory();
 };
