@@ -1,4 +1,5 @@
 #include "../inc/FileDirectory.h"
+#include "NodePool.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
@@ -9,13 +10,17 @@ FileDirectory::FileDirectory()
     root = nullptr;
     head = nullptr;
     tail = nullptr;
-    //vec_search_results.reserve(2);
     num_of_nodes = 0;
     is_scanning = false;
 }
 
 bool FileDirectory::scan(fs::path directory_path)
 {
+    if (!fs::exists(directory_path) || !fs::is_directory(directory_path))
+    {
+        std::cerr << "Directory path doesnt exist\n";
+        return false;
+    }
     if (is_scanning)
     {
         std::cout << "Already Scanning...\n";
@@ -48,27 +53,25 @@ bool FileDirectory::scan(fs::path directory_path)
     return true;
 }
 
+// TODO:
+// ?    Spawn multiple threads to scan the directory path more efficiently
 TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_path)
 {
     try
     {
-        if (!fs::exists(directory_path) || !fs::is_directory(directory_path))
-        {
-            std::cerr << "Directory path doesnt exist\n";
-            return nullptr;
-        }
         TreeNode* first_child = nullptr;
         TreeNode* last_child = nullptr;
 
         for (const auto& entry : fs::directory_iterator(directory_path,
             std::filesystem::directory_options::skip_permission_denied))
         {
-            TreeNode* new_node = new TreeNode();
+            TreeNode* new_node = static_cast<TreeNode*>(node_memory_pool.allocate_node());
             new_node->parent = parent;
-            new_node->sub_folder = nullptr;
-            new_node->next_file = nullptr;
-            // linked list for linear search
-            new_node->next_all = nullptr;
+            // new_node->sub_folder = nullptr;
+            // new_node->next_file = nullptr;
+            // new_node->next_all = nullptr;// linked list for linear search
+            // new_node->file_name = nullptr;
+            // new_node->file_path = nullptr;
             if (!head)
                 head = new_node;
             else
@@ -79,12 +82,13 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
             std::string path = entry.path().string();
             new_node->file_name = (char*)malloc(name.length() + 1);
             new_node->file_path = (char*)malloc(path.length() + 1);
-            std::strcpy((char*)new_node->file_name, name.c_str());
-            std::strcpy((char*)new_node->file_path, path.c_str());
+            std::strcpy(new_node->file_name, name.c_str());
+            std::strcpy(new_node->file_path, path.c_str());
 
             if (entry.is_regular_file())
             {
                 new_node->is_directory = false;
+                // ! decide if i need this later
                 //new_node->file_size = entry.file_size();
                 //new_node->file_size = 0;
             }
@@ -99,7 +103,7 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
             {
                 free(new_node->file_name);
                 free(new_node->file_path);
-                delete new_node;
+                //delete new_node;
                 continue;
             }
 
@@ -128,7 +132,7 @@ vector<TreeNode*> FileDirectory::get_search_results(const char* search_string)
         return vec_results; // return empty
 
     TreeNode* current = head;
-    uint16_t num_of_occurences = 0;
+    int num_of_occurences = 0;
 
     while (current != nullptr)
     {
@@ -156,6 +160,7 @@ void FileDirectory::delete_tree_nodes(TreeNode* node)
 {
     if (!node)
         return;
+
     if (node->file_name)
         free(node->file_name);
     if (node->file_path)
@@ -178,13 +183,15 @@ TreeNode* FileDirectory::get_root_node() const
 
 FileDirectory::~FileDirectory()
 {
+    //node_memory_pool.~NodePool();
     if (thr_scan_directory.joinable())
         thr_scan_directory.join();
     else
         std::cout << "Thread was not used, \n";
     if (root != nullptr)
     {
-        delete_tree_nodes(root);
+        node_memory_pool.reset();
+        //delete_tree_nodes(root);
         root = nullptr;
         std::cout << "All tree nodes are deleted\n";
     }

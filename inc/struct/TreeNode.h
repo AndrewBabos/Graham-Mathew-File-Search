@@ -9,13 +9,6 @@ struct TreeNode
     TreeNode* next_all = nullptr; // for linear search (LinkedList DS)
     char* file_name = nullptr;
     char* file_path = nullptr;
-
-    // ! THINK
-    // do I really need this?
-    // Afterall the user is jujst gonna want to be
-    // brought to the file location in Windows Explorer...
-    //size_t file_size = 0;
-
-    bool is_directory;
+    bool is_directory = false;
 };
 #endif

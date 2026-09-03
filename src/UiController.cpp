@@ -5,7 +5,6 @@
 #include "../external//imgui/imgui_impl_opengl3.h"
 #include "../inc/IconsFontAwesome6.h"
 #include <iostream>
-#include <variant>
 
 UiController::UiController()
 {
@@ -174,27 +173,33 @@ void UiController::file_directory_table(FileDirectory& file_directory)
 
         if (is_searching)
         {
+            static int id = 0;
             for (const TreeNode* node : vec_search_results)
-            {                                             // ICON_FA_FILE & FOLDER are the same size
+            {                                 // ICON_FA_FILE & FOLDER are the same size
                 const size_t size = strlen(node->file_name) + sizeof(ICON_FA_FILE) + STR_SPACE;
                 char node_name[size];
                 if (node->is_directory)
                 {
+                    ImGui::PushID(id);
                     snprintf(node_name, size, "%s %s", ICON_FA_FOLDER, node->file_name);
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TreeNodeEx(node_name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
                     ImGui::TableNextRow();
+                    ImGui::PopID();
                 }
                 else
                 {
+                    ImGui::PushID(id);
                     snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
                     // std::cout << "Calculated size to display: " << size << "\n";
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TreeNodeEx(node_name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
                     ImGui::TableNextRow();
+                    ImGui::PopID();
                 }
+                id++;
             }
         }
         else
@@ -229,6 +234,7 @@ void UiController::display_nodes(TreeNode* node)
             snprintf(node_name, size, "%s %s", ICON_FA_FOLDER, node->file_name);
             if (ImGui::TreeNodeEx(node_name, node_flags))
             {
+                // this doesnt work for some reason
                 if (ImGui::IsMouseClicked(RMB))
                     file_info_popup();
                 ImGui::TableNextColumn();
@@ -248,17 +254,16 @@ void UiController::display_nodes(TreeNode* node)
                 ImGui::TextUnformatted("Folder");
             else
                 ImGui::TextUnformatted("File");
-            //ImGui::TableNextColumn();
-            //ImGui::Text("%zu (Bytes)", node->file_size);
         }
         node = node->next_file;
     }
 }
 
+// TODO:
+// ?    Figure out how to open a tiny window for the user to
+// ?    open file explorer TO the filepath
 void UiController::file_info_popup()
 {
-    static int count = 0;
-    std::cout << "testing " << count++ << "\n";
     if (ImGui::BeginPopup("File Properties"))
     {
         ImGui::Text("Hello from popup!");

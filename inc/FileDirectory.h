@@ -1,6 +1,7 @@
 #ifndef FILE_DIRECTORY_H
 #define FILE_DIRECTORY_H
 #include "../inc/struct/TreeNode.h"
+#include "NodePool.hpp"
 #include <thread>
 #include <filesystem>
 
@@ -12,6 +13,8 @@ namespace fs = std::filesystem;
 // <summary>This class represents the FileDirectory Data Structure
 class FileDirectory
 {
+private:
+    NodePool  node_memory_pool;
 private:
     TreeNode* root; // root of directory tree DS
     TreeNode* head; // linked list for linear search
