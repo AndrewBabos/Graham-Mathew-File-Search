@@ -2,6 +2,7 @@
 #define FILE_DIRECTORY_H
 #include "../inc/struct/TreeNode.h"
 #include "NodePool.hpp"
+#include <string>
 #include <thread>
 #include <filesystem>
 
@@ -20,11 +21,13 @@ private:
     TreeNode* head; // linked list for linear search
     TreeNode* tail;
     std::thread thr_scan_directory;
+    //std::mutex
     int num_of_nodes;
     bool is_scanning;
 private:
     void delete_tree_nodes(TreeNode* node);
     TreeNode* scan_directory(TreeNode* parent, fs::path directory_path);
+    void set_file_name_and_path(TreeNode* node, std::string file, std::string file_path);
 public:
     FileDirectory();
     const char* open_folder_dialog();

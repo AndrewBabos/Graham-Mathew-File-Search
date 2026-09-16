@@ -148,6 +148,14 @@ void UiController::search_bar(FileDirectory& file_directory)
         }
         is_directory_scanned = file_directory.scan(folder_path);
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Reset Display"))
+    {
+        if (is_directory_scanned)
+            is_searching = false;
+        else
+            std::cout << "cant reset display if nothing was scanned...\n";
+    }
 }
 
 /// <summary>file_directory is a method of class UiController
@@ -178,6 +186,8 @@ void UiController::file_directory_table(FileDirectory& file_directory)
             {                                 // ICON_FA_FILE & FOLDER are the same size
                 const size_t size = strlen(node->file_name) + sizeof(ICON_FA_FILE) + STR_SPACE;
                 char node_name[size];
+                if (ImGui::IsMouseClicked(RMB))
+                    std::cout << node->file_path << "\n";
                 if (node->is_directory)
                 {
                     ImGui::PushID(id);
@@ -192,7 +202,6 @@ void UiController::file_directory_table(FileDirectory& file_directory)
                 {
                     ImGui::PushID(id);
                     snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
-                    // std::cout << "Calculated size to display: " << size << "\n";
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TreeNodeEx(node_name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
@@ -215,7 +224,7 @@ void UiController::display_nodes(TreeNode* node)
 {
     if (!node)
         return;
-
+    std::cout << "Node was not null\n";
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
 
@@ -231,12 +240,14 @@ void UiController::display_nodes(TreeNode* node)
 
         if (node->is_directory)
         {
+            std::cout << "Node is a directory\n";
             snprintf(node_name, size, "%s %s", ICON_FA_FOLDER, node->file_name);
             if (ImGui::TreeNodeEx(node_name, node_flags))
             {
                 // this doesnt work for some reason
                 if (ImGui::IsMouseClicked(RMB))
-                    file_info_popup();
+                    std::cout << node->file_path << "\n";
+                    //file_info_popup();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Folder");
                 display_nodes(node->sub_folder);
@@ -245,16 +256,19 @@ void UiController::display_nodes(TreeNode* node)
         }
         else
         {
+            std::cout << "Node is a file\n";
             snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
             ImGui::TreeNodeEx(node_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
             if (ImGui::IsMouseClicked(RMB))
-                file_info_popup();
+                std::cout << node->file_path << "\n";
+                //file_info_popup();
             ImGui::TableNextColumn();
             if (node->is_directory)
                 ImGui::TextUnformatted("Folder");
             else
                 ImGui::TextUnformatted("File");
         }
+        std::cout << "onto the next file\n";
         node = node->next_file;
     }
 }

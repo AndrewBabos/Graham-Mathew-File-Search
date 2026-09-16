@@ -1,5 +1,6 @@
 #include "../inc/FileDirectory.h"
 #include "NodePool.hpp"
+//#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <cstring>
@@ -28,7 +29,8 @@ bool FileDirectory::scan(fs::path directory_path)
     }
     if (thr_scan_directory.joinable())
         thr_scan_directory.join();
-
+    head = nullptr;
+    tail = nullptr;
     is_scanning = true;
     thr_scan_directory = std::thread([this, directory_path]()
     {
@@ -57,52 +59,49 @@ bool FileDirectory::scan(fs::path directory_path)
 // ?    Spawn multiple threads to scan the directory path more efficiently
 TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_path)
 {
+    TreeNode* first_child = nullptr;
+    TreeNode* last_child = nullptr;
+
     try
     {
-        TreeNode* first_child = nullptr;
-        TreeNode* last_child = nullptr;
-
         for (const auto& entry : fs::directory_iterator(directory_path,
             std::filesystem::directory_options::skip_permission_denied))
         {
             TreeNode* new_node = static_cast<TreeNode*>(node_memory_pool.allocate_node());
+            if (!new_node)
+            {
+                std::cerr << "Memory allocation from node pool failed...\n";
+
+            }
             new_node->parent = parent;
-            // new_node->sub_folder = nullptr;
-            // new_node->next_file = nullptr;
-            // new_node->next_all = nullptr;// linked list for linear search
-            // new_node->file_name = nullptr;
-            // new_node->file_path = nullptr;
-            if (!head)
-                head = new_node;
+            new_node->file_name = nullptr;
+            new_node->file_path = nullptr;
+            new_node->is_directory = false;
+
+            if (!this->head)
+                this->head = new_node;
             else
                 tail->next_all = new_node;
             tail = new_node;
 
             std::string name = entry.path().filename().string();
             std::string path = entry.path().string();
-            new_node->file_name = (char*)malloc(name.length() + 1);
-            new_node->file_path = (char*)malloc(path.length() + 1);
-            std::strcpy(new_node->file_name, name.c_str());
-            std::strcpy(new_node->file_path, path.c_str());
+            set_file_name_and_path(new_node, std::move(name), std::move(path));
+
 
             if (entry.is_regular_file())
-            {
                 new_node->is_directory = false;
-                // ! decide if i need this later
-                //new_node->file_size = entry.file_size();
-                //new_node->file_size = 0;
-            }
+
             else if (entry.is_directory())
             {
                 new_node->is_directory = true;
-                //new_node->file_size = 0;
                 TreeNode* sub_tree_root = scan_directory(new_node, entry.path());
                 new_node->sub_folder = sub_tree_root;
             }
             else
             {
-                free(new_node->file_name);
-                free(new_node->file_path);
+                delete new_node->file_name;
+                delete new_node->file_path;
                 //delete new_node;
                 continue;
             }
@@ -119,10 +118,33 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
     }
     catch (fs::filesystem_error& file_error)
     {
+        if (file_error.code() == std::errc::io_error ||
+            file_error.code() == std::errc::connection_reset ||
+            file_error.code() == std::errc::network_unreachable)
+        {
+            std::cout << "Network error encountered: " << file_error.what() << "\n";
+            return nullptr;
+        }
+        else
+        {
+            std::cout << "Permission or access error: " << file_error.what() << "\n";
+            return first_child; // Return what we have so far
+        }
+    }
+    catch (...)
+    {
+        std::cout << "Unexpected error during scan.\n";
         is_scanning = false;
-        std::cout <<"Error reading file, someones accessed it: " << file_error.what() << "\n";
         return nullptr;
-    };
+    }
+}
+
+void FileDirectory::set_file_name_and_path(TreeNode* node, std::string file_name, std::string file_path)
+{
+    node->file_name = new char[file_name.length() + 1];
+    node->file_path = new char[file_path.length() + 1];
+    std::strcpy(node->file_name, file_name.c_str());
+    std::strcpy(node->file_path, file_path.c_str());
 }
 
 vector<TreeNode*> FileDirectory::get_search_results(const char* search_string)
@@ -154,6 +176,7 @@ const char* FileDirectory::open_folder_dialog()
     //return "C:/Users/Andrew/Documents/GitHub/C++";
     //return "C:/Users/Andrew/Documents/GitHub";
     return "C:/"; // ABSOLUTE LIMIT TEST
+    //return "Z:/Nathan Graham/"; // prod testing
 }
 
 void FileDirectory::delete_tree_nodes(TreeNode* node)
