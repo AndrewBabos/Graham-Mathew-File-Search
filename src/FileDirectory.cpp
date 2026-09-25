@@ -12,6 +12,10 @@ FileDirectory::FileDirectory()
     //vec_search_results.reserve(2);
     num_of_nodes = 0;
     is_scanning = false;
+
+    // threads
+    threads_count = std::thread::hardware_concurrency();
+    
 }
 
 bool FileDirectory::scan(fs::path directory_path)
@@ -85,9 +89,12 @@ TreeNode* FileDirectory::scan_directory(TreeNode* parent, fs::path directory_pat
             if (entry.is_regular_file())
             {
                 new_node->is_directory = false;
+<<<<<<< Updated upstream
                 //new_node->file_size = entry.file_size();
                 //new_node->file_size = 0;
             }
+=======
+>>>>>>> Stashed changes
             else if (entry.is_directory())
             {
                 new_node->is_directory = true;

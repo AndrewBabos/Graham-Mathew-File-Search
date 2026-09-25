@@ -11,3 +11,4 @@ external/glfw/*
 /build
 build.bat
 .cache
+/build_two

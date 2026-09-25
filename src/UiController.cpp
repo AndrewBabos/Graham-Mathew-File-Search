@@ -149,6 +149,20 @@ void UiController::search_bar(FileDirectory& file_directory)
         }
         is_directory_scanned = file_directory.scan(folder_path);
     }
+<<<<<<< Updated upstream
+=======
+    if (is_directory_scanned)
+    {
+        ImGui::SameLine();
+        if (ImGui::Button("Reset Display"))
+        {
+            if (is_directory_scanned && is_searching)
+                is_searching = false;
+            else
+                std::cout << "cant reset display if nothing was scanned...\n";
+        }
+    }
+>>>>>>> Stashed changes
 }
 
 /// <summary>file_directory is a method of class UiController
@@ -210,7 +224,10 @@ void UiController::display_nodes(TreeNode* node)
 {
     if (!node)
         return;
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
 
