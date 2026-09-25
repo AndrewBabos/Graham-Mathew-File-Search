@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(FileSearch)
 
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 add_subdirectory(external/glfw)
 
@@ -21,6 +27,7 @@ file(GLOB_RECURSE FILESEARCH_SOURCES
 )
 file(GLOB_RECURSE FILESEARCH_HEADERS
     "${CMAKE_SOURCE_DIR}/inc/*.h"
+    "${CMAKE_SOURCE_DIR}/inc/*.hpp"
 )
 # -------- ImGui --------
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui)
@@ -55,3 +62,11 @@ target_link_libraries(FileSearch PRIVATE
     glfw
     opengl32
 )
+
+if(WIN32)
+    add_custom_command(TARGET FileSearch POST_BUILD
+        # Copy the GLFW DLL to the output directory
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:glfw>
+            $<TARGET_FILE_DIR:FileSearch>)
+endif()
