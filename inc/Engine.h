@@ -7,9 +7,10 @@
 class Engine
 {
 private:
-    FileDirectory file_directory;
-    UiController ui_controller;
-    bool startup_finished = false;
+    FileDirectory      file_directory;
+    UiController        ui_controller;
+//  ThreadPool            thread_pool;
+    bool     startup_finished = false;
 private:
     //void run();
 public:
