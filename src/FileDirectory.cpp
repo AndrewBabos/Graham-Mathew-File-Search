@@ -15,7 +15,7 @@ FileDirectory::FileDirectory()
     is_scanning = false;
 
     // threads
-    threads_count = std::thread::hardware_concurrency();
+    //threads_count = std::thread::hardware_concurrency();
 
 }
 

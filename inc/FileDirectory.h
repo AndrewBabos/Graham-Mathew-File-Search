@@ -23,7 +23,7 @@ private:
     std::vector<std::thread> thr_workers;
     std::queue<std::thread> queue_of_workers;
     std::thread thr_scan_directory;
-    static uint16_t threads_count;
+    //uint16_t threads_count;
 
     //std::mutex
     //std::mutex

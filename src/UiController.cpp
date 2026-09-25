@@ -235,7 +235,6 @@ void UiController::display_nodes(TreeNode* node)
 {
     if (!node)
         return;
-    std::cout << "Node was not null\n";
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
 
@@ -251,7 +250,6 @@ void UiController::display_nodes(TreeNode* node)
 
         if (node->is_directory)
         {
-            std::cout << "Node is a directory\n";
             snprintf(node_name, size, "%s %s", ICON_FA_FOLDER, node->file_name);
             if (ImGui::TreeNodeEx(node_name, node_flags))
             {
@@ -267,7 +265,6 @@ void UiController::display_nodes(TreeNode* node)
         }
         else
         {
-            std::cout << "Node is a file\n";
             snprintf(node_name, size, "%s %s", ICON_FA_FILE, node->file_name);
             ImGui::TreeNodeEx(node_name, node_flags | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen);
             if (ImGui::IsMouseClicked(RMB))
@@ -279,7 +276,6 @@ void UiController::display_nodes(TreeNode* node)
             else
                 ImGui::TextUnformatted("File");
         }
-        std::cout << "onto the next file\n";
         node = node->next_file;
     }
 }
